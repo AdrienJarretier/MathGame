@@ -93,7 +93,6 @@ void ScreenLevelChoice::loadLevelUnlocked()
 
 void SelectLevel::selectingLevel()
 {
-    // // std::cout << m_difficulty << " " <<  m_level << "  " << m_modeSelectLevel << std::endl;
     m_stat->setParamLevel(m_difficulty,m_level,m_modeSelectLevel);
     m_isClicked = true;
 }

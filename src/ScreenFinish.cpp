@@ -23,10 +23,28 @@
 
 ScreenFinish::ScreenFinish()
 {
-//    m_texture.loadFromFile(FilenameBGFinish);
-//    m_bg.setTexture(m_texture);
+    m_font.loadFromFile(FilenameFont);
 
-    m_bg.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameBGFinish)));
+    sf::Color color (31, 41, 46);
+
+    m_stringList.push_back(sf::String("A video Game made by : Adrien Jarretier and Guillaume Gomez."));
+    m_stringList.push_back(sf::String("I hope you enjoyed playing this game as much we enjoyed developing it !"));
+    m_stringList.push_back(sf::String("Thank you fellow gamer :)"));
+
+    for(auto index = 0 ; index < m_stringList.size(); ++index)
+    {
+        sf::Text newText;
+                 newText.setFont(m_font);
+                 newText.setString(m_stringList[index]);
+                 newText.setColor(color);
+                 newText.setCharacterSize(17);
+                 unsigned int x = 40;
+                 unsigned int y = WindowHeight / 2 - 80 + (60 * index);
+
+           newText.setPosition((float)x, (float)y);
+           m_textList.push_back(newText);
+    }
+
 }
 
 ScreenFinish::~ScreenFinish()
@@ -34,29 +52,28 @@ ScreenFinish::~ScreenFinish()
     //dtor
 }
 
-int ScreenFinish::Run(sf::RenderWindow & App)
-{
-    bool Running = true;
+ int ScreenFinish::Run(sf::RenderWindow & App)
+ {
+    bool running = true;
     m_clock.restart();
-    while(Running)
+    while(running)
     {
-        m_bg.setPosition(App.getSize().x/2 - m_bg.getGlobalBounds().width/2, App.getSize().y/2 - m_bg.getGlobalBounds().height/2);
-        sf::Event event;
+         sf::Event event;
         //Verifing events
         while(App.pollEvent(event))
         {
             if(event.type == sf::Event::Closed)
             {
-                Running = false;
+                running = false;
                 App.close();
             }
 
             if(event.type == sf::Event::KeyPressed)
             {
-                if(event.key.code == sf::Keyboard::Escape)
-                {
-                    return MENU;
-                }
+               if(event.key.code == sf::Keyboard::Escape)
+               {
+                   return MENU;
+               }
             }
 
         }
@@ -66,11 +83,13 @@ int ScreenFinish::Run(sf::RenderWindow & App)
             return MENU;
         }
 
-        App.clear();
-        App.draw(m_bg);
-        App.display();
+    App.clear(sf::Color(207,216,220));
+    for(auto index = 0 ; index < m_stringList.size(); ++index) {
+        App.draw(m_textList[index]);
+    }
+    App.display();
 
     }
 
     return (SCREEN_EXIT);
-}
+ }

@@ -19,35 +19,33 @@
  *                      or https://github.com/AdrienJarretier
  */
 
-#include "ButtonAnim.hpp"
+#include "StaticButton.hpp"
 
-ButtonAnim::ButtonAnim(const char* _filename, int _widthFrame,int _heightFrame)
-:StaticButton(_filename), m_changing(true)
+StaticButton::StaticButton(const char* _filename)
+:m_filename(_filename), m_clicked(false), m_isFocused(false)
 {
-   if (m_texture.loadFromFile(_filename))
-   {
-       m_spriteList.setTexture(m_texture);
-       m_spriteList.SetFrameSize(_widthFrame,_heightFrame);
-   }
-   else
-   {
-		#ifdef DEBUG
-			std::cerr << "In constructor of ButtonAnim :Texture don't loaded (revoir les cours d'anglais)" << std::endl;
-		#endif // DEBUG
-   }
+    sf::Texture * texture = nullptr;
+    texture = TextureManager::getTextureManager()->getResource(std::string(m_filename));
+    if(texture)
+    {
+        this->setTexture(*texture);
+    }
+    /*else
+    {
+        // std::cout << "Warning : in StaticButton, Constructor didn't find a file texture " << m_filename << std::endl;
+    }*/
 }
 
-void ButtonAnim::handle_input(sf::Event& event,sf::RenderTarget& target)
+void StaticButton::handle_input(sf::Event& event,sf::RenderTarget& target)
 {
     if(event.type == sf::Event::MouseButtonPressed)
     {
-            int x = event.mouseButton.x;
-            int y = event.mouseButton.y;
-            sf::Vector2f coord = target.mapPixelToCoords((sf::Vector2i(x, y)));
+        int x = event.mouseButton.x;
+        int y = event.mouseButton.y;
+        sf::Vector2f coord = target.mapPixelToCoords((sf::Vector2i(x, y)));
 
         if(getGlobalBounds().contains(coord.x, coord.y))
         {
-            m_changing = true;
             m_clicked = true;
         }
     }
@@ -66,38 +64,23 @@ void ButtonAnim::handle_input(sf::Event& event,sf::RenderTarget& target)
         if(getGlobalBounds().contains(coord.x, coord.y))
         {
             setAlpha(Clear);
+            m_isFocused = true;
         }
         else
         {
             setAlpha(Blur);
+            m_isFocused = false;
         }
     }
 }
 
-void ButtonAnim::Launch()
+
+void StaticButton::draw(sf::RenderTarget& app)
 {
-    m_spriteList.Play();
+    app.draw(*this);
 }
 
-void ButtonAnim::switchTile()
-{
-    if(m_changing)
-    {
-        int nbSprite = m_spriteList.GetFrameCount();
-        int _currentFrame = m_spriteList.getCurrentFrame();
-                            m_spriteList.setCurrentFrame(_currentFrame+1);
-        this->setTextureRect(m_spriteList.GetFramePosition(_currentFrame % nbSprite));
-        m_changing = false;
-    }
-
-}
-
-/*void ButtonAnim::draw(sf::RenderTarget& target)
-{
-    target.draw(this);
-}*/
-
-ButtonAnim::~ButtonAnim()
+StaticButton::~StaticButton()
 {
     //dtor
 }

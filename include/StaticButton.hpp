@@ -19,31 +19,55 @@
  *                      or https://github.com/AdrienJarretier
  */
 
-#ifndef SCREENFINISH_H
-#define SCREENFINISH_H
+#ifndef STATICBUTTON_H
+#define STATICBUTTON_H
 
-#include "Screen.hpp"
-#include "SFML/Graphics.hpp"
+#ifdef DEBUG
+	 #include <iostream>
+#endif //DEBUG
+#include <string>
+
+
+#include <SFML/Graphics.hpp>
+
 #include "../constants.hpp"
-
 #include "../libs/ResourcesManagerSFML2_1.hpp"
 
-class ScreenFinish : public Screen
+class StaticButton : public sf::Sprite
 {
     public:
-        ScreenFinish();
-        virtual ~ScreenFinish();
-        int Run(sf::RenderWindow & App);
+        StaticButton(const char* _filename = "");
+        virtual ~StaticButton();
+        void handle_input(sf::Event& event, sf::RenderTarget& target);
+        void setAlpha (int _alpha);
+        bool isFocused() const;
+        void draw(sf::RenderTarget& app);
+        bool isClicked() const;
+        void unclick();
 
     protected:
-    private:
-    	sf::Sprite m_bg;
-        sf::Clock m_clock;
-        std::vector<sf::String> m_stringList;
-    	std::vector<sf::Text> m_textList;
-    	sf::Font  m_font;
-    
-
+        std::string m_filename;
+        bool m_clicked;
+        bool m_isFocused;
+        sf::Texture m_texture;
 };
 
-#endif // SCREENFINISH_H
+/**
+*
+**/
+
+inline bool StaticButton::isClicked() const {return m_clicked;};
+
+inline void StaticButton::setAlpha (int _alpha)
+{
+    this->setColor(sf::Color(255, 255, 255, _alpha));
+}
+
+inline bool StaticButton::isFocused() const { return m_isFocused;}
+
+inline void StaticButton::unclick()
+{
+    m_clicked = false;
+}
+
+#endif // STATICBUTTON_H

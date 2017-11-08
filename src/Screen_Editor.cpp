@@ -22,7 +22,7 @@
 #include "Screen_Editor.hpp"
 
 Screen_Editor::Screen_Editor(sf::RenderWindow& App, ScreenLink* link)
-    :m_editor(App), m_link(link)
+:m_editor(App), m_link(link)
 {
     recenterCamera();
 }
@@ -34,20 +34,20 @@ Screen_Editor::~Screen_Editor()
 
 int Screen_Editor::Run(sf::RenderWindow& App)
 {
-    bool Running = true;
+    bool running = true;
     m_editor.setBack(false);
     m_editor.setCenterCamera();
     m_editor.setSaving(false);
 
 
-    while(Running)
+    while(running)
     {
-        Running =  m_editor.handleInput();
+       running =  m_editor.handleInput();
 
         if(m_editor.isBacked())
         {
             recenterCamera();
-            Running = false;
+            running = false;
             return MENU;
         }
         m_editor.move();
@@ -63,5 +63,5 @@ void Screen_Editor::recenterCamera()
 {
     sf::View   viewPerso = m_editor.m_app.getView();
     viewPerso.reset(sf::FloatRect(0, 0, WindowWidth, WindowHeight));
-    m_editor.m_app.setView(viewPerso);
+	m_editor.m_app.setView(viewPerso);
 }

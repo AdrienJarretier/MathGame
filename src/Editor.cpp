@@ -27,31 +27,34 @@
 #include "ObjectFactoryAbstract.hpp"
 
 Editor::Editor(sf::RenderWindow& App)
-    :m_app(App),m_axis( GraphScale ),
-     m_textAreaFunction(6),
-     m_graphView(m_graphModel,Thickness, GraphScale),
-     m_buttonReset(FilenameButtonReset),
-     m_buttonSave(FilenameButtonSave),
-     m_buttonBack(FilenameButtonBack),
-     m_buttonCursor(FilenameButtonCursor),
-     m_buttonGoalButton(FilenamePointGoalTex),
-     m_buttonCircle(FilenameButtonCircleTex),
-     m_buttonNormalButton(FilenameNormalPointTex),
-     m_buttonLeftEnemy(FilenameButtonEnemy),
-     m_buttonPanel(FilenameButtonPanel),
-     m_buttonInfo(FilenamePanelInfoTex),
-     m_creatingType(TypeObject::Point),
-     m_isBack(false),
-     m_isNormalPoint(true),
-     m_isZoom(false),
-     m_saving(false),
-     m_isLeftEnemy(true), m_nbAttempt(1),
-     m_radiusBuilder(0.0f, 0.0f)
+:m_app(App),m_axis( GraphScale),
+m_textAreaFunction(6),
+m_graphView(m_graphModel,Thickness, GraphScale),
+m_buttonReset(FilenameButtonReset),
+m_buttonSave(FilenameButtonSave),
+m_buttonBack(FilenameButtonBack),
+m_buttonCursor(FilenameButtonCursor),
+m_buttonGoalButton(FilenamePointGoalTex),
+m_buttonCircle(FilenameButtonCircleTex),
+m_buttonNormalButton(FilenameNormalPointTex),
+m_buttonLeftEnemy(FilenameButtonEnemy),
+m_buttonPanel(FilenameButtonPanel),
+m_creatingType(TypeObject::Point),
+m_buttonInfo(FilenamePanelInfoTexMin),
+m_buttonAddFunction(FilenameAddFunctionTex),
+m_isBack(false),
+m_isNormalPoint(true),
+m_isZoom(false),
+m_saving(false),
+m_isLeftEnemy(true), m_nbAttempt(1),
+m_radiusBuilder(0.0f, 0.0f)
 {
     //
     m_nbAttemptView.setColor(sf::Color(23,0,34,225));
     m_nbAttemptView.setString(sf::String("EnemyLife : 1"));
-    m_nbAttemptView.setPosition(sf::Vector2f(m_app.getSize().x - 210, m_app.getSize().y - 25));
+    m_nbAttemptView.setPosition(sf::Vector2f(m_app.getSize().x - 210, m_app.getSize().y - 40));
+
+    m_buttonAddFunction.setPosition(sf::Vector2f(270, m_app.getSize().y - 60));
 
     sf::Texture* text = TextureManager::getTextureManager()->getResource(std::string(FilenameBGGame));
     text->setRepeated(true);
@@ -108,12 +111,14 @@ void Editor::resize(float scaleX, float scaleY)
     m_buttonCircle.scale(scaleX, scaleY);
     m_textAreaFunction.scale(scaleX, scaleY);
     m_buttonInfo.scale(scaleX, scaleY);
+    m_buttonAddFunction.scale(scaleX, scaleY);
 }
 
 bool Editor::handleInput()
 {
     float oldWidth = m_app.getSize().x;
     float oldHeight = m_app.getSize().y;
+
     while(m_app.pollEvent(m_event))
     {
         switch(m_event.type)
@@ -127,15 +132,16 @@ bool Editor::handleInput()
             resize((float)oldWidth/m_event.size.width, (float)oldHeight/m_event.size.height);
             break;
 
-        case sf::Event::MouseMoved:
-        {
-            int x = m_event.mouseMove.x - m_buttonCursor.getLocalBounds().width / 2;
-            int y = m_event.mouseMove.y - m_buttonCursor.getLocalBounds().height / 2;
-            sf::Vector2f coord = m_app.mapPixelToCoords((sf::Vector2i(x, y)));
-            m_buttonCursor.setPosition(coord);
-
-        }
-        break;
+             case sf::Event::MouseMoved:
+                 {
+                    float widthWithScale = m_buttonCursor.getLocalBounds().width * m_buttonCursor.getScale().x;
+                    float heightWithScale = m_buttonCursor.getLocalBounds().height * m_buttonCursor.getScale().y;
+                    int x = m_event.mouseMove.x - widthWithScale / 2;
+                    int y = m_event.mouseMove.y - heightWithScale / 2;
+                    sf::Vector2f coord = m_app.mapPixelToCoords((sf::Vector2i(x, y)));
+                    m_buttonCursor.setPosition(coord);
+                 }
+            break;
 
         case sf::Event::MouseButtonPressed:
         {
@@ -200,91 +206,71 @@ bool Editor::handleInput()
                 }
                 else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
                 {
-                    m_viewPerso.setCenter(center.x, center.y + 10);
+                    sf::Vector2f center = m_viewPerso.getCenter();
+                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
+                    {
+                        popPoint();
+                    }
+                    else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+                    {
+                        m_viewPerso.setCenter(center.x, center.y - 10);
+                    }
+                    else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+                    {
+                        m_viewPerso.setCenter(center.x, center.y + 10);
+                    }
+                    else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+                    {
+                        m_viewPerso.setCenter(center.x - 10, center.y);
+                    }
+                    else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+                    {
+                        m_viewPerso.setCenter(center.x + 10, center.y);
+                    }
+                    m_axis.receiveView(m_viewPerso);
+                    m_graphView.receiveView(m_viewPerso);
                 }
-                else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+                else if(m_event.key.code == sf::Keyboard::Up)
                 {
-                    m_viewPerso.setCenter(center.x - 10, center.y);
+                    m_nbAttempt++;
+                    if(m_nbAttempt > MaxAttempt) {
+                        m_nbAttempt = MaxAttempt;
+                    }
+                    std::ostringstream oss;
+                    oss <<"EnemyLife : " << m_nbAttempt;
+                    m_nbAttemptView.setString(sf::String(oss.str()));
                 }
-                else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-                {
-                    m_viewPerso.setCenter(center.x + 10, center.y);
-                }
-                m_axis.receiveView(m_viewPerso);
-                m_graphView.receiveView(m_viewPerso);
-            }
-
-            if(m_event.key.code == sf::Keyboard::Left)
-            {
-                m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonLeftEnemy)));
-                m_isLeftEnemy = true;
-            }
-            if(m_event.key.code == sf::Keyboard::Right)
-            {
-                m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonRightEnemy)));
-                m_isLeftEnemy = false;
-                //std::cout << "clickRight " << m_isLeftEnemy << std::endl;
-            }
-
-            if(m_event.key.code == sf::Keyboard::Up)
-            {
-                m_nbAttempt++;
-                if( m_nbAttempt > MaxAttempt)
-                {
-                    m_nbAttempt = MaxAttempt;
-                }
-                std::ostringstream oss;
-                oss <<"EnemyLife : " << m_nbAttempt;
-                m_nbAttemptView.setString(sf::String(oss.str()));
-            }
-
-            if(m_event.key.code == sf::Keyboard::Down)
-            {
-                m_nbAttempt--;
-                if(m_nbAttempt < 1)
+                else if(m_event.key.code == sf::Keyboard::Down)
                 {
                     m_nbAttempt = 1;
                 }
-                std::ostringstream oss;
-                oss <<"EnemyLife : "<< m_nbAttempt;
-                m_nbAttemptView.setString(sf::String(oss.str()));
-            }
+                else if(m_event.key.code == sf::Keyboard::Left)
+                {
+                    if(m_creatingType == TypeObject::Enemy)
+                    {
+                       m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonLeftEnemy)), true);
+                       m_buttonCursor.setScale(1, 1);
+                       m_isLeftEnemy = true;
+                    }
+                }
+                else if(m_event.key.code == sf::Keyboard::Right)
+                {
+                    if(m_creatingType == TypeObject::Enemy)
+                    {
+                       m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonRightEnemy)), true);
+                       m_buttonCursor.setScale(1, 1);
+                       m_isLeftEnemy = false;
+                    }
+                }
             break;
         default:
             break;
         }
-
         m_textAreaFunction.handleInput(m_event, m_app);
         m_panel.handle_input(m_event, m_app);
-
-        if(m_buttonGoalButton.isClicked())
-        {
-            m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonCursor)));
-            m_buttonCursor.setColor(sf::Color(255, 0, 0, Blur));
-        }
-        if(m_buttonNormalButton.isClicked())
-        {
-            m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonCursor)));
-            m_buttonCursor.setColor(sf::Color(0, 0, 0, Blur));
-        }
-        if(m_buttonCircle.isClicked())
-        {
-            m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonCursor)));
-            m_buttonCursor.setColor(sf::Color(0, 0, 150, Blur));
-        }
-        if(m_buttonLeftEnemy.isClicked())
-        {
-            m_buttonCursor.setColor(sf::Color(255, 255, 255, Blur));
-            m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonLeftEnemy)));
-            m_isLeftEnemy = true;
-        }
-        if(m_buttonInfo.isClicked())
-        {
-            m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenamePanelInfoTex)));
-            m_buttonCursor.setColor(sf::Color(0, 0, 150, Blur));
-        }
+        m_buttonAddFunction.handle_input(m_event, m_app);
     }
-    return true ;
+    return true;
 }
 
 
@@ -320,6 +306,9 @@ void Editor::draw()
     m_nbAttemptView.draw(m_app);
 
     m_buttonCursor.draw(m_app);
+
+    m_buttonAddFunction.draw(m_app);
+
     m_app.draw(m_textAreaFunction);
 }
 
@@ -341,10 +330,6 @@ void Editor::deletePoint(int x , int y)
     }
 }
 
-void Editor::deleteGravityCircle(int x, int y)
-{
-}
-
 void Editor::move()
 {
     m_panel.movePanel(m_app);
@@ -352,49 +337,67 @@ void Editor::move()
     if(m_buttonReset.isClicked())
     {
         reset();
-        m_buttonReset.unclick();
     }
 
     if(m_buttonBack.isClicked())
     {
         m_isBack = true;
-        m_buttonBack.unclick();
     }
     if(m_buttonSave.isClicked())
     {
         m_saving = true;
-        m_buttonSave.unclick();
     }
 
     if(m_buttonGoalButton.isClicked())
     {
+        m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonCursor)), true);
+        m_buttonCursor.setScale(1, 1);
+        m_buttonCursor.setColor(sf::Color(255, 0, 0, Blur));
+
         m_creatingType = TypeObject::GoalPoint;
         m_isNormalPoint = false;
-        m_buttonGoalButton.unclick();
     }
 
     if(m_buttonNormalButton.isClicked())
     {
+        m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonCursor)), true);
+        m_buttonCursor.setScale(1, 1);
+        m_buttonCursor.setColor(sf::Color(0, 0, 0, Blur));
+
         m_creatingType = TypeObject::Point;
         m_isNormalPoint = true;
-        m_buttonNormalButton.unclick();
     }
     if(m_buttonCircle.isClicked())
     {
+        m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonCursor)), true);
+        m_buttonCursor.setScale(1, 1);
+        m_buttonCursor.setColor(sf::Color(0, 0, 150, Blur));
+
         m_creatingType = TypeObject::Circle;
-        m_buttonCircle.unclick();
     }
 
     if(m_buttonLeftEnemy.isClicked())
     {
+        m_buttonCursor.setColor(sf::Color(255, 255, 255, Blur));
+        m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenameButtonLeftEnemy)), true);
+        m_buttonCursor.setScale(1, 1);
+        m_isLeftEnemy = true;
+
         m_creatingType = TypeObject::Enemy;
-        m_buttonLeftEnemy.unclick();
     }
 
     if(m_buttonInfo.isClicked())
     {
+        m_buttonCursor.setTexture(*TextureManager::getTextureManager()->getResource(std::string(FilenamePanelInfoTex)), true);
+        m_buttonCursor.setScale(1, 0.34);
+        m_buttonCursor.setColor(sf::Color(0, 0, 150, Blur));
+
         m_creatingType = TypeObject::Info;
-        m_buttonInfo.unclick();
+    }
+
+    if(m_buttonAddFunction.isClicked())
+    {
+        m_creatingType = TypeObject::Function;
     }
 
     if(m_graphModel.getChanged())
@@ -402,7 +405,6 @@ void Editor::move()
         m_graphView.represent(Step);
         m_graphModel.setChanged(false);
     }
-
 }
 
 void Editor::reset()
@@ -438,10 +440,11 @@ int Editor::save(ScreenLink * link)
             return -1;
         }
 
-        int nbGoalPoint = 0;
-        //if there is just one red point
-        //for(std::vector<EditorCircle*>::iterator it = m_spriteList.begin(); it != m_spriteList.end() ; it++)
-        for(auto it : m_spriteList)
+    int nbGoalPoint = 0;
+    //if there is just one red point
+    for(auto it : m_spriteList)
+    {
+        if(it->getType() == TypeObject::GoalPoint)
         {
             if(it->getType() == TypeObject::GoalPoint)
             {
@@ -454,69 +457,85 @@ int Editor::save(ScreenLink * link)
             m_textVerifSave.setColor(sf::Color(237,28,36));
             return -1;
         }
+    }
+
+    if(nbGoalPoint != 1)
+    {
+        m_textVerifSave.setString(sf::String("Level not Saved : there is not or too much goal point "));
+        m_textVerifSave.setColor(sf::Color(237,28,36));
+        return -1;
+    }
 
         //sort m_spriteList
         std::sort (m_spriteList.begin(), m_spriteList.end(), EditorObject::compare);
 
-        std::vector<std::string> fileList;
-        fileList.push_back("Easy");
-        fileList.push_back("Normal");
-        fileList.push_back("Hard");
+    std::vector<std::string> fileList;
+    fileList.push_back("Easy");
+    fileList.push_back("Normal");
+    fileList.push_back("Hard");
 
 
-        unsigned int numberattempt = 0;
-        for( auto it : m_spriteList)
+    unsigned int numberattempt = 0;
+    for( auto it : m_spriteList)
+    {
+        if(it->getType() == TypeObject::Point || it->getType() == TypeObject::GoalPoint)
         {
-            if(it->getType() == TypeObject::Point || it->getType() == TypeObject::GoalPoint)
-            {
-                numberattempt++;
-            }
+            numberattempt++;
         }
-
-        if(numberattempt < 1)
-        {
-            //to avoid negative number
-            numberattempt+= 2;
-        }
-
-        m_textVerifSave.setString(sf::String("Level Saved"));
-        m_textVerifSave.setColor(sf::Color(34,177,76));
-        for(unsigned int i = 0 ; i < TotalDifficulty ; i++)
-        {
-            std::ostringstream oss;
-            oss << FilenameLevelDirectory << link->getNbFiles() + 1 << "_" << fileList[i] <<".lvl" ;
-            std::ofstream file(oss.str().c_str());
-            if( file.is_open())
-            {
-                file << m_spriteList.size() << std::endl;
-                file << numberattempt << std::endl;
-
-                for( unsigned int j = 0 ; j < m_spriteList.size(); j++)
-                {
-                    file <<  m_spriteList[j]->save(GraphScale);
-                }
-
-                file.close();
-            }
-            else
-            {
-                m_textVerifSave.setString(sf::String("Level not Saved"));
-                m_textVerifSave.setColor(sf::Color(237,28,36));
-                return -1;
-            }
-            numberattempt-- ;
-        }
-        link->setnbFiles(link->getNbFiles()+1);
     }
-    sf::FloatRect coord = m_textVerifSave.getText().getLocalBounds ();
-    m_textVerifSave.setPosition(sf::Vector2f(-coord.width/2 , 0));
-    return 0 ;
+
+    if(numberattempt < 1)
+    {
+        //to avoid negative number
+        numberattempt+= 2;
+    }
+
+    m_textVerifSave.setString(sf::String("Level Saved"));
+    m_textVerifSave.setColor(sf::Color(34,177,76));
+    for(unsigned int i = 0 ; i < TotalDifficulty ;i++)
+    {
+        std::ostringstream oss;
+        oss << FilenameLevelDirectory << link->getNbFiles() + 1 << "_" << fileList[i] <<".lvl" ;
+        std::ofstream file(oss.str().c_str());
+        if( file.is_open())
+        {
+           file << m_spriteList.size() << std::endl;
+           file << numberattempt << std::endl;
+
+           for( unsigned int j = 0 ; j < m_spriteList.size();j++)
+           {
+                file <<  m_spriteList[j]->save(GraphScale);
+           }
+
+          file.close();
+        }
+        else
+        {
+             m_textVerifSave.setString(sf::String("Level not Saved"));
+             m_textVerifSave.setColor(sf::Color(237,28,36));
+             return -1;
+        }
+        numberattempt-- ;
+    }
+    link->setnbFiles(link->getNbFiles()+1);
+   }
+   sf::FloatRect coord = m_textVerifSave.getText().getLocalBounds ();
+   m_textVerifSave.setPosition(sf::Vector2f(-coord.width/2 , 0));
+   return 0 ;
 
 }
 
 void Editor::addObject(int x , int y)
 {
-    if(m_panel.isVisible())
+    if(m_buttonAddFunction.isFocused())
+    {
+        Curves *newCurve = dynamic_cast<Curves*>(ObjectFactoryAbstract::create(TypeObject::Function));
+        newCurve->setFunction(m_textAreaFunction.getString());
+        newCurve->build();
+        newCurve->receiveView(m_viewPerso);
+        m_spriteList.push_back(newCurve);
+    }
+    else if(m_panel.isVisible())
     {
         sf::Vector2f coord = (sf::Vector2f)m_app.mapPixelToCoords((sf::Vector2i(x,y)),m_viewPerso);
 
@@ -531,10 +550,10 @@ void Editor::addObject(int x , int y)
             {
                 static sf::Vector2f goalCoords;
                 std::vector<EditorObject*>::iterator it = m_spriteList.begin();
-                bool goalSpriteFound=false;
-                while(it!=m_spriteList.end() && !goalSpriteFound)
+                bool goalSpriteFound = false;
+                while(it != m_spriteList.end() && !goalSpriteFound)
                 {
-                    if((*it)->get_Position() == goalCoords)
+                    if((*it)->getType() == TypeObject::GoalPoint && (*it)->get_Position() == goalCoords)
                     {
                         m_spriteList.erase(it);
                         goalSpriteFound = true;
@@ -553,7 +572,9 @@ void Editor::addObject(int x , int y)
         else if (m_creatingType == TypeObject::Enemy)
         {
             Enemy* newEnemy = dynamic_cast<Enemy*>(ObjectFactoryAbstract::create(TypeObject::Enemy));
-            newEnemy->setPosition(coord.x / GraphScale, -coord.y / GraphScale);
+            float x = coord.x;
+            float y =  - coord.y - m_buttonCursor.getLocalBounds().height / 2;
+            newEnemy->setPosition(x / GraphScale, y / GraphScale);
             newEnemy->setDirection(m_isLeftEnemy);
             newEnemy->setNbAttempt(m_nbAttempt);
             newEnemy->show();
@@ -563,9 +584,11 @@ void Editor::addObject(int x , int y)
         else if (m_creatingType == TypeObject::Info)
         {
             InfoDisplayer* newInfo = dynamic_cast<InfoDisplayer*>(ObjectFactoryAbstract::create(TypeObject::Info));
-            newInfo->setPosition(coord.x - m_buttonCursor.getLocalBounds().width / 2,
-                                 coord.y - m_buttonCursor.getLocalBounds().height / 2);
-            newInfo->setMessage("Message temporaire");
+            float widthWithScale = m_buttonCursor.getLocalBounds().width * m_buttonCursor.getScale().x;
+            float heightWithScale = m_buttonCursor.getLocalBounds().height * m_buttonCursor.getScale().y;
+            newInfo->setPosition(coord.x - widthWithScale / 2,
+                                 coord.y - heightWithScale / 2);
+            newInfo->setMessage("Lorem Ipsum");
             m_spriteList.push_back(newInfo);
         }
     }

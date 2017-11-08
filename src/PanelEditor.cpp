@@ -31,10 +31,10 @@ PanelEditor::PanelEditor()
     {
         this->setTexture(*texture);
     }
-    /*  else
-      {
-          // std::cout << "Warning : in ButtonPerso, Constructor didn't find a file texture " << FilenameButtonPanel << std::endl;
-      }*/
+  /*  else
+    {
+        // std::cout << "Warning : in StaticButton, Constructor didn't find a file texture " << FilenameButtonPanel << std::endl;
+    }*/
 
 }
 
@@ -43,8 +43,8 @@ PanelEditor::~PanelEditor()
     for (unsigned int i = 0; i < m_vectButton.size(); i++)
     {
         // TODO µµµµµµµ
-        //ButtonPerso * temp = m_vectButton.pop_back();
-        //delete temp;
+    	//StaticButton * temp = m_vectButton.pop_back();
+    	//delete temp;
     }
 }
 
@@ -59,13 +59,12 @@ void PanelEditor::draw(sf::RenderTarget& app)
 }
 
 
-void PanelEditor::addButton(ButtonPerso* button)
+void PanelEditor::addButton(StaticButton* button)
 {
     unsigned int nbButton = m_vectButton.size();
 
     if(nbButton == 0)
     {
-//         float Y = (this->getLocalBounds().height - (button->getLocalBounds().height / 2)) / 2;
         int offsetY = int (this->getPosition().y) / 2;
         float X = this->getLocalBounds().width / 2 - button->getLocalBounds().width/ 2 + this->getPosition().x;
 
@@ -88,7 +87,7 @@ void PanelEditor::addButton(ButtonPerso* button)
     }
 }
 
-ButtonPerso* PanelEditor::popButton()
+StaticButton* PanelEditor::popButton()
 {
     //return m_vectButton.pop_back();
     //TODO
@@ -96,13 +95,13 @@ ButtonPerso* PanelEditor::popButton()
 }
 
 
-ButtonPerso* PanelEditor::deleteButton(unsigned int i)
+StaticButton* PanelEditor::deleteButton(unsigned int i)
 {
     // TODO
     return 0;
 }
 
-ButtonPerso* PanelEditor::deleteButton(ButtonPerso* button)
+StaticButton* PanelEditor::deleteButton(StaticButton* button)
 {
     // TODO
     return 0;
@@ -179,7 +178,7 @@ void PanelEditor::movePanel(sf::RenderTarget& target)
     }
 }
 
-void PanelEditor::setAlpha (int _alpha)
+void PanelEditor::setAlpha(int _alpha)
 {
     this->setColor(sf::Color(255, 255, 255, _alpha));
 }
