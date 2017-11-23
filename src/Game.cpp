@@ -37,8 +37,12 @@ Game::Game(RenderWindow& _app , Difficulty _diff)
  m_frameCount(0),
  m_frameCountText("hello", *FontManager::getFontManager()->getResource("resources/fonts/garde.ttf")),
 #endif
- m_gameStarted(false), m_isZoom(false), m_isSound(true), m_isBack(false),
- m_player(new Hero), m_playerDead(false)
+ m_gameStarted(false),
+ m_isZoom(false),
+ m_isSound(true),
+ m_isBack(false),
+ m_player(new Hero),
+ m_playerDead(false)
 {
     #ifdef DEBUG
 //        std::cout << "game constructor" << std::endl;
@@ -228,7 +232,6 @@ void Game::draw()
 
     m_textAreaFunction.setPosition(0, m_app.getSize().y - m_textAreaFunction.getGlobalBounds().height - 10);
     m_app.draw(m_textAreaFunction);
-    //m_textFunction.draw(m_app);
 
     #ifdef DEBUG
         m_frameCount++;
@@ -342,8 +345,8 @@ void Game::move()
             m_functionManager.represent(Step);
             m_textAreaFunction.setString(m_functionManager.getFunction());
             m_level.decrementAttempt();
-            m_timer.restart();
         }
+        m_timer.restart();
     }
 
 }
@@ -368,12 +371,11 @@ int Game::selectLevel(ScreenLink& stat, bool forceLoading)
         {
             m_gameStarted = true;
             m_level.fillLevelFunctions(m_functionManager);
-            m_level.decrementAttempt();
+            m_functionManager.resetToZero();
             m_functionManager.colorize();
             Physics::Engine::getEngine()->setFunction(m_functionManager.getModelIndex());
             m_functionManager.represent(Step);
             m_textAreaFunction.setString(m_functionManager.getFunction());
-            m_timer.restart();
         }
     }
     catch(std::ios_base::failure& failure)
@@ -383,7 +385,7 @@ int Game::selectLevel(ScreenLink& stat, bool forceLoading)
 //        #endif // DEBUG
         throw;
     }
-    reset();
+    init();
     return changing;
 }
 
@@ -415,7 +417,7 @@ int Game::levelOperation(ScreenLink& stat)
       return changing;
 }
 
-void Game::reset()
+void Game::init()
 {
     resetWindow();
 
@@ -435,6 +437,12 @@ void Game::reset()
     }
     Physics::Engine::getEngine()->resetAllObjects();
     m_player->reset(m_level.getInitialPosition());
+    m_level.initEnemies();
+    if(getGameMode() == GameMode::Dynamic)
+    {
+        m_level.decrementAttempt();
+    }
+    m_timer.restart();
 }
 
 Game::~Game()
